@@ -109,12 +109,16 @@ class MainSpec extends FunSuite {
   }
 
   test("the round trip holds with a pipe delimiter and a wider indent") {
-    val toon = roundTrip(Seq("--encode", "--delimiter", "pipe", "--indent", "4"), Seq("--decode", "--indent", "4"))
+    val toon = roundTrip(
+      Seq("--encode", "--delimiter", "pipe", "--indent", "4"),
+      Seq("--decode", "--indent", "4"),
+    )
     assert(toon.contains("|"), toon)
   }
 
   test("folded keys come back as nested objects when paths are expanded") {
-    val toon = roundTrip(Seq("--encode", "--key-folding", "safe"), Seq("--decode", "--expand-paths", "safe"))
+    val toon =
+      roundTrip(Seq("--encode", "--key-folding", "safe"), Seq("--decode", "--expand-paths", "safe"))
     assert(toon.contains("meta.source.system"), toon)
   }
 
@@ -126,12 +130,14 @@ class MainSpec extends FunSuite {
   // --- failure paths ---------------------------------------------------------
 
   test("invalid JSON fails the encode with a message") {
-    val result = Main.run(Main.Config(mode = Some(Main.EncodeMode), input = tempFile(".json", "{not json")))
+    val result =
+      Main.run(Main.Config(mode = Some(Main.EncodeMode), input = tempFile(".json", "{not json")))
     assert(result.left.exists(_.startsWith("Invalid JSON input:")), result)
   }
 
   test("a missing input file fails with a message") {
-    val result = Main.run(Main.Config(mode = Some(Main.EncodeMode), input = Paths.get("does-not-exist.json")))
+    val result =
+      Main.run(Main.Config(mode = Some(Main.EncodeMode), input = Paths.get("does-not-exist.json")))
     assert(result.left.exists(_.startsWith("Failed to read input:")), result)
   }
 
@@ -144,4 +150,5 @@ class MainSpec extends FunSuite {
     ))
     assert(result.left.exists(_.startsWith("Failed to write output:")), result)
   }
+
 }
