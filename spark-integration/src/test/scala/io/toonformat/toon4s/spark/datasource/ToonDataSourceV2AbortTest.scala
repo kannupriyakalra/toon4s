@@ -26,7 +26,9 @@ class ToonDataSourceV2AbortTest extends SparkTestSuite {
     if (!Files.exists(dir)) Nil
     else
       Using.resource(Files.walk(dir))(
-        _.iterator().asScala.filter(p => Files.isRegularFile(p) && p.getFileName.toString.endsWith(".toon")).toList
+        _.iterator().asScala.filter(p =>
+          Files.isRegularFile(p) && p.getFileName.toString.endsWith(".toon")
+        ).toList
       )
 
   private def withTempDir[A](prefix: String)(f: JPath => A): A =
@@ -56,9 +58,15 @@ class ToonDataSourceV2AbortTest extends SparkTestSuite {
         assert(
           Iterator.iterate[Throwable](failure)(_.getCause).takeWhile(_ != null)
             .exists(e => Option(e.getMessage).exists(_.contains("Failed to rename"))),
-          Iterator.iterate[Throwable](failure)(_.getCause).takeWhile(_ != null).map(e => s"${e.getClass.getName}: ${e.getMessage}").mkString("\n"),
+          Iterator.iterate[Throwable](failure)(_.getCause).takeWhile(_ != null).map(e =>
+            s"${e.getClass.getName}: ${e.getMessage}"
+          ).mkString("\n"),
         )
-        assertEquals(filesUnder(output), Nil, "no part file reached the output, and staging was removed")
+        assertEquals(
+          filesUnder(output),
+          Nil,
+          "no part file reached the output, and staging was removed",
+        )
       } finally {
         hadoopConf.unset("fs.failrename.impl")
         hadoopConf.unset("fs.failrename.impl.disable.cache")
@@ -72,7 +80,14 @@ class ToonDataSourceV2AbortTest extends SparkTestSuite {
     new ToonBatchWrite(queryId, output.toUri.toString, "rows", 1, schema, localConf)
 
   private def factory(output: JPath, queryId: String): ToonDataWriterFactory =
-    new ToonDataWriterFactory(output.toUri.toString, queryId, "rows", 1, schema, new SerializableConfiguration(localConf))
+    new ToonDataWriterFactory(
+      output.toUri.toString,
+      queryId,
+      "rows",
+      1,
+      schema,
+      new SerializableConfiguration(localConf),
+    )
 
   test("job abort removes the query's staging files and leaves other queries' alone") {
     assume(!isWindows, "TOON datasource write tests need winutils on Windows CI")
@@ -89,7 +104,11 @@ class ToonDataSourceV2AbortTest extends SparkTestSuite {
 
       assertEquals(filesUnder(output.resolve("_temporary").resolve("aborted")), Nil)
       assertEquals(filesUnder(output.resolve("_temporary").resolve("other")).size, 3)
-      assertEquals(filesUnder(output).count(_.getParent == output), 0, "nothing was moved into the output")
+      assertEquals(
+        filesUnder(output).count(_.getParent == output),
+        0,
+        "nothing was moved into the output",
+      )
     }
   }
 
@@ -105,7 +124,8 @@ class ToonDataSourceV2AbortTest extends SparkTestSuite {
 
       aborted.abort()
 
-      val staged = filesUnder(output.resolve("_temporary").resolve("query")).map(_.getFileName.toString)
+      val staged =
+        filesUnder(output.resolve("_temporary").resolve("query")).map(_.getFileName.toString)
       assertEquals(staged.size, 2)
       assert(staged.forall(_.contains("-0-0-")), staged)
     }
@@ -118,6 +138,7 @@ class ToonDataSourceV2AbortTest extends SparkTestSuite {
       assertEquals(filesUnder(output), Nil)
     }
   }
+
 }
 
 // The local disk under its own scheme, with every rename failing: tasks can stage their files, but the
